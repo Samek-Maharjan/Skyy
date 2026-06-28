@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TravelPal | SKYY</title>
+  <link rel="preconnect" href="https://images.unsplash.com">
+  <link rel="preconnect" href="https://upload.wikimedia.org">
+  <link rel="stylesheet" href="Untitled1.css">
+</head>
+<body>
+  <main id="app"></main>
+
+  <!-- Page 1: Landing Page -->
+  <template id="landing-template">
+    <section class="landing page-view">
+      <nav class="topbar hero-nav">
+        <div class="brand">
+          <span class="brand-mark">TP</span>
+          <span>TravelPal</span>
+        </div>
+      </nav>
+      <div class="hero-content reveal">
+        <h1 class="hero-title">SKYY</h1>
+        <p>Discover Nepal with TravelPal</p>
+        <button class="primary-btn large" data-action="show-login">Get Started</button>
+      </div>
+    </section>
+  </template>
+
+  <script>
+    const app = document.querySelector("#app");
+
+    const savedUser = JSON.parse(localStorage.getItem("travelpalUser") || "null");
+    const savedProfile = JSON.parse(localStorage.getItem("travelpalProfile") || "null");
+
+    const state = {
+      screen: savedProfile ? "dashboard" : savedUser ? "preferences" : "landing",
+      user: savedUser,
+      profile: savedProfile,
+      favorites: JSON.parse(localStorage.getItem("travelpalFavorites") || "[]"),
+      history: JSON.parse(localStorage.getItem("travelpalHistory") || "[]"),
+      trips: JSON.parse(localStorage.getItem("travelpalTrips") || "[]"),
+      theme: localStorage.getItem("travelpalTheme") || "light",
+      lang: localStorage.getItem("travelpalLang") || "en",
+      category: "healthcare"
+    };
+
+    const destinations = [
+      {
+        name: "Nagarjun Forest Reserve",
+        area: "Nagarjun",
+        type: "Hidden Gems",
+        tags: ["hiking", "nature exploration", "mountains", "wildlife watching", "photography", "hidden gems"],
+        score: 88,
+        cost: 1800,
+        time: "35 min from central Kathmandu",
+        image: "https://upload.wikimedia.org/wikipedia/commons/4/4a/A_view_of_Shivapuri_national_park_from_Sundarijal.jpg",
+        tip: "A quiet forest escape with ridge walks, monastery views, and bird watching."
+      },
+      {
+        name: "Jamacho Gumba",
+        area: "Nagarjun Hill",
+        type: "Recommended For You",
+        tags: ["religious visit", "hiking", "temples", "cultural experience", "photography"],
+        score: 91,
+        cost: 1200,
+        time: "2.5 hr hike",
+        image: "https://travellingnepaltips.com/wp-content/uploads/2018/07/jamacho-gumba-1024x551.jpg",
+        tip: "Best for sunrise, prayer flags, and wide Kathmandu Valley views."
+      },
+      {
+        name: "Swayambhunath Stupa",
+        area: "Kathmandu",
+        type: "Popular Destinations",
+        tags: ["temples", "heritage sites", "cultural experience", "historical tours", "photography"],
+        score: 94,
+        cost: 2500,
+        time: "20 min from Nagarjun",
+        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Swayambhunath_2018.jpg/960px-Swayambhunath_2018.jpg",
+        tip: "A heritage icon with Buddhist art, city views, and local craft shops."
+      },
+      {
+        name: "Pashupatinath Temple",
+        area: "Kathmandu",
+        type: "Trending Places",
+        tags: ["temples", "religious visit", "heritage sites", "cultural experience"],
+        score: 90,
+        cost: 3200,
+        time: "45 min from Nagarjun",
+        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Pashupatinath_Temple-2020.jpg/960px-Pashupatinath_Temple-2020.jpg",
+        tip: "A sacred Hindu complex with evening aarti and deep cultural significance."
+      },
+      {
+        name: "Boudhanath Stupa",
+        area: "Kathmandu",
+        type: "Popular Destinations",
+        tags: ["temples", "heritage sites", "relaxation", "cultural programs", "shopping"],
+        score: 89,
+        cost: 2800,
+        time: "50 min from Nagarjun",
+        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Boudhanath_stupa_%2C_Kathmandu%2C_Nepal.jpg/960px-Boudhanath_stupa_%2C_Kathmandu%2C_Nepal.jpg",
+        tip: "A peaceful circular walk with cafes, monasteries, and Tibetan culture."
+      },
+      {
+        name: "Pokhara Lakeside",
+        area: "Pokhara",
+        type: "Trending Places",
+        tags: ["lakes", "boating", "relaxation", "family vacation", "food exploration", "adventure"],
+        score: 93,
+        cost: 9000,
+        time: "7 hr drive or 25 min flight",
+        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Phewa_lake%2C_Pokhara.jpg/960px-Phewa_lake%2C_Pokhara.jpg",
+        tip: "Ideal for lakes, mountain views, paragliding, and slower family days."
+      },
+      {
+        name: "Chitwan National Park",
+        area: "Chitwan",
+        type: "Popular Destinations",
+        tags: ["national parks", "wildlife watching", "family vacation", "nature exploration", "camping"],
+        score: 87,
+        cost: 11000,
+        time: "5.5 hr drive",
+        image: "https://upload.wikimedia.org/wikipedia/commons/8/82/Chitwan_swamp.jpg",
+        tip: "Choose this for jungle walks, canoeing, Tharu culture, and wildlife safaris."
+      },
+      {
+        name: "Langtang Valley",
+        area: "Rasuwa",
+        type: "Recommended For You",
+        tags: ["trekking", "mountains", "adventure", "villages", "photography"],
+        score: 92,
+        cost: 18000,
+        time: "7 hr drive plus trek",
+        image: "https://upload.wikimedia.org/wikipedia/commons/8/84/Starry_night_in_Langtang_National_Park.jpg",
+        tip: "A classic Himalayan route for trekkers who want big scenery near Kathmandu."
+      },
+      {
+        name: "Indra Daha",
+        area: "Nagarjun side hills",
+        type: "Hidden Gems",
+        tags: ["hidden gems", "lakes", "relaxation", "nature exploration", "photography"],
+        score: 84,
+        cost: 1600,
+        time: "40 min local route",
+        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Indradaha_Dahachowk_Switzerland_Park_Chandragiri_Kathmandu_Nepal_Rajesh_Dhungana_%289%29.jpg/960px-Indradaha_Dahachowk_Switzerland_Park_Chandragiri_Kathmandu_Nepal_Rajesh_Dhungana_%289%29.jpg",
+        tip: "A calm local viewpoint and pond area for unhurried exploration."
+      }
+    ];
+
+    const categoryData = {
+      healthcare: {
+        title: "Healthcare",
+        intro: "Nearby medical support for visitors around Nagarjun and Kathmandu Valley.",
+        services: ["Hospitals and clinics", "Pharmacies", "Travel health guidance", "Emergency referrals"],
+        contacts: ["Nepal Police: 100", "Ambulance: 102", "Tourist Police: 1144", "Teaching Hospital Maharajgunj: +977-1-4412404"],
+        recommendations: ["Carry prescription copies", "Use bottled or filtered water", "Keep altitude medication advice for treks"]
+      },
+      emergency: {
+        title: "Emergency",
+        intro: "Fast access to tourist support, police, ambulance, and rescue contacts.",
+        services: ["Police support", "Ambulance coordination", "Tourist help centers", "Route safety advice"],
+        contacts: ["Police: 100", "Fire: 101", "Ambulance: 102", "Tourist Police: 1144"],
+        recommendations: ["Share your itinerary", "Save offline maps", "Avoid isolated trails after dark"]
+      },
+      education: {
+        title: "Education",
+        intro: "Learning visits, cultural workshops, libraries, and school or university connections.",
+        services: ["Cultural learning tours", "University visits", "Language support", "Research guidance"],
+        contacts: ["Nagarjun Municipality Office", "Local cultural centers", "Tribhuvan University information desk"],
+        recommendations: ["Book guided heritage walks", "Visit museums early", "Ask for community-led workshops"]
+      },
+      shopping: {
+        title: "Shopping",
+        intro: "Local markets, craft stores, trekking gear, and souvenir routes.",
+        services: ["Local markets", "Handicrafts", "Trekking equipment", "Food and spice shops"],
+        contacts: ["Thamel market area", "Asan Bazaar", "Local Nagarjun stores"],
+        recommendations: ["Compare prices politely", "Choose locally made crafts", "Keep small NPR notes"]
+      },
+      transportation: {
+        title: "Transportation",
+        intro: "Routes, local mobility options, and practical travel timing for visitors.",
+        services: ["Taxi and ride-hailing", "Local buses", "Tourist buses", "Private vehicle hire"],
+        contacts: ["Tourist bus park", "Local taxi stands", "Nagarjun route operators"],
+        recommendations: ["Start early for valley traffic", "Confirm fares before rides", "Use private jeeps for hill roads"]
+      },
+      business: {
+        title: "Business",
+        intro: "Support for business visitors, meetings, connectivity, and local services.",
+        services: ["Meeting spaces", "Banking and ATMs", "SIM cards", "Municipal office guidance"],
+        contacts: ["Nagarjun Municipality", "Local banks", "Nepal Tourism Board"],
+        recommendations: ["Carry ID copies", "Keep digital payment backup", "Schedule meetings outside peak traffic"]
+      }
+    };
+
+    const translations = {
+      en: {
+        help: "We Are Here To Help You",
+        ask: "Ask about Nepal",
+        generate: "Generate My Trip",
+        recommended: "Recommended For You",
+        trending: "Trending Places",
+        popular: "Popular Destinations",
+        hidden: "Hidden Gems"
+      },
+      ne: {
+        help: "हामी तपाईंलाई सहयोग गर्न यहाँ छौं",
+        ask: "नेपालको बारेमा सोध्नुहोस्",
+        generate: "मेरो यात्रा बनाउनुहोस्",
+        recommended: "तपाईंका लागि सिफारिस",
+        trending: "चल्तीका ठाउँहरू",
+        popular: "लोकप्रिय गन्तव्य",
+        hidden: "लुकेका रत्नहरू"
+      }
+    };
+
+    function save() {
+      localStorage.setItem("travelpalUser", JSON.stringify(state.user));
+      localStorage.setItem("travelpalProfile", JSON.stringify(state.profile));
+      localStorage.setItem("travelpalFavorites", JSON.stringify(state.favorites));
+      localStorage.setItem("travelpalHistory", JSON.stringify(state.history));
+      localStorage.setItem("travelpalTrips", JSON.stringify(state.trips));
+      localStorage.setItem("travelpalTheme", state.theme);
+      localStorage.setItem("travelpalLang", state.lang);
+      if (state.user) localStorage.setItem("travelpalSession", "active");
+    }
+
+    function updateHistory(screen, replace = false) {
+      const hash = screen === "landing" ? "" : `#${screen}`;
+      const url = `${window.location.pathname}${hash}`;
+      if (replace) {
+        window.history.replaceState({ screen }, "", url);
+      } else {
+        window.history.pushState({ screen }, "", url);
+      }
+    }
+
+    function applyTransition(direction = "forward") {
+      app.classList.remove("page-forward", "page-back");
+      void app.offsetWidth;
+      app.classList.add(direction === "back" ? "page-back" : "page-forward");
+      window.setTimeout(() => app.classList.remove("page-forward", "page-back"), 380);
+    }
+
+    function setScreen(screen, pushHistory = true, transitionDirection = "forward") {
+      if (screen === "dashboard" && !state.profile) screen = "preferences";
+      state.screen = screen;
+      render();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      if (pushHistory) updateHistory(screen);
+      applyTransition(transitionDirection);
+    }
+
+    window.addEventListener("popstate", event => {
+      const nextScreen = event.state?.screen || "landing";
+      const screen = nextScreen === "dashboard" && !state.profile ? "preferences" : nextScreen;
+      state.screen = screen;
+      render();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      applyTransition("back");
+    });
+
+    function userTags() {
+      if (!state.profile) return [];
+      return [
+        ...state.profile.purpose,
+        ...state.profile.activities,
+        ...state.profile.explore
+      ].map(item => item.toLowerCase());
+    }
+
+    function rankedDestinations() {
+      const tags = userTags();
+      const budget = Number(state.profile?.budget || 12000);
+      return destinations
+        .map(place => {
+          const matches = place.tags.filter(tag => tags.includes(tag)).length;
+          const budgetFit = place.cost <= budget ? 10 : Math.max(0, 10 - Math.round((place.cost - budget) / 2000));
+          return { ...place, relevance: Math.min(99, place.score + matches * 5 + budgetFit) };
+        })
+        .sort((a, b) => b.relevance - a.relevance);
+    }
+
+    function render() {
+      document.body.dataset.theme = state.theme;
+      if (state.screen === "landing") {
+        app.innerHTML = document.querySelector("#landing-template").innerHTML;
+      } else if (state.screen === "login") {
+        renderLogin();
+      } else if (state.screen === "preferences") {
+        renderPreferences();
+      } else if (state.screen === "category") {
+        renderCategory();
+      } else {
+        renderDashboard();
+      }
+      bindActions();
+    }
+
+    <!-- Page 2: Login Page -->
+    function renderLogin() {
+      app.innerHTML = `
+        <section class="auth page-view">
+          <div class="auth-panel glass reveal">
+            <div class="brand centered"><span class="brand-mark">TP</span><span>TravelPal</span></div>
+            <h1>Welcome to SKYY</h1>
+            <p>Create your secure travel session before we personalize Nepal for you.</p>
+            <form id="login-form" class="stack">
+              <label>Full Name<input id="fullName" required placeholder="Your name" value="${state.user?.name || ""}"></label>
+              <label>Gmail Address<input id="email" required placeholder="name@gmail.com" value="${state.user?.email || ""}"></label>
+              <p class="form-error" id="login-error"></p>
+              <button class="primary-btn wide" type="submit">Ready</button>
+            </form>
+          </div>
+        </section>
+      `;
+    }
+
+    function choiceGroup(title, key, options) {
+      const selected = state.profile?.[key] || [];
+      return `
+        <div class="survey-step">
+          <h2>${title}</h2>
+          <div class="choice-grid" data-choice-group="${key}">
+            ${options.map(option => `
+              <button type="button" class="choice ${selected.includes(option) ? "selected" : ""}" data-choice="${option}">
+                ${option}
+              </button>`).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    // <!-- Page 3: Preferences Page -->
+    function renderPreferences() {
+      app.innerHTML = `
+        <section class="setup page-view">
+          <div class="setup-shell">
+            <nav class="topbar compact"><div class="brand"><span class="brand-mark">TP</span><span>TravelPal</span></div></nav>
+            <div class="namaste-marquee" aria-label="Namaste marquee">
+              <div class="namaste-track">
+                <span>Namaste</span>
+                <span>Namaste</span>
+                <span>Namaste</span>
+                <span>Namaste</span>
+                <span>Namaste</span>
+                <span>Namaste</span>
+                <span>Namaste</span>
+                <span>Namaste</span>
+              </div>
+            </div>
+            <form id="profile-form" class="survey glass reveal">
+            <div>
+              <p class="eyebrow">Tourist Preference Setup</p>
+              <h1>Build your personal Nepal travel profile</h1>
+            </div>
+            ${choiceGroup("1. Purpose of Visit", "purpose", ["Tourism", "Adventure", "Religious Visit", "Business", "Education", "Family Vacation", "Nature Exploration", "Photography", "Cultural Experience"])}
+            ${choiceGroup("2. Preferred Activities", "activities", ["Hiking", "Trekking", "Sightseeing", "Boating", "Camping", "Wildlife Watching", "Food Exploration", "Shopping", "Historical Tours", "Cultural Programs", "Photography", "Relaxation"])}
+            ${choiceGroup("3. What Would You Like To Explore?", "explore", ["Mountains", "Lakes", "Temples", "National Parks", "Villages", "Heritage Sites", "Museums", "Local Markets", "Waterfalls", "Hidden Gems"])}
+            <div class="survey-step">
+              <h2>4. Trip Information</h2>
+              <div class="form-grid">
+                <label>Number of travelers<input type="number" min="1" id="travelers" value="${state.profile?.travelers || 2}"></label>
+                <label>Budget range (NPR)<input type="number" min="1000" id="budget" value="${state.profile?.budget || 15000}"></label>
+                <label>Number of days<input type="number" min="1" id="days" value="${state.profile?.days || 3}"></label>
+                <label>Preferred transportation
+                  <select id="transport"><option>Private Car</option><option>Taxi</option><option>Tourist Bus</option><option>Local Bus</option><option>Walking</option></select>
+                </label>
+                <label>Accommodation preference
+                  <select id="accommodation"><option>Comfort Hotel</option><option>Budget Guesthouse</option><option>Homestay</option><option>Resort</option></select>
+                </label>
+              </div>
+            </div>
+              <p class="form-error" id="profile-error"></p>
+              <button class="primary-btn large" type="submit"><span>Create My Travel Profile</span></button>
+            </form>
+          </div>
+        </section>
+      `;
+      if (state.profile?.transport) document.querySelector("#transport").value = state.profile.transport;
+      if (state.profile?.accommodation) document.querySelector("#accommodation").value = state.profile.accommodation;
+    }
+
+    function card(place) {
+      const saved = state.favorites.some(item => item.name === place.name);
+      return `
+        <article class="place-card">
+          <img src="${place.image}" alt="${place.name}" loading="lazy">
+          <div>
+            <div class="card-head">
+              <h3>${place.name}</h3>
+              <button class="icon-btn ${saved ? "saved" : ""}" data-action="favorite" data-name="${place.name}" title="Save destination">${saved ? "★" : "☆"}</button>
+            </div>
+            <p>${place.tip}</p>
+            <div class="meta-row"><span>${place.area}</span><span>${place.time}</span><span>${place.relevance}% match</span></div>
+          </div>
+        </article>
+      `;
+    }
+
+    function sectionCards(title, items) {
+      return `<section class="dashboard-block"><h2>${title}</h2><div class="card-list">${items.map(card).join("")}</div></section>`;
+    }
+
+    // <!-- Page 5: Dashboard Page -->
+    function renderDashboard() {
+      const t = translations[state.lang];
+      const ranked = rankedDestinations();
+      const recommended = ranked.slice(0, 3);
+      const trending = ranked.filter(p => p.type === "Trending Places").slice(0, 3);
+      const popular = ranked.filter(p => p.type === "Popular Destinations").slice(0, 3);
+      const hidden = ranked.filter(p => p.type === "Hidden Gems").slice(0, 3);
+      app.innerHTML = `
+        <section class="dashboard page-view">
+          ${renderHeader()}
+          <div class="dashboard-grid">
+            <aside class="left-rail">
+              ${sectionCards(t.recommended, recommended)}
+              ${sectionCards(t.trending, trending)}
+              ${sectionCards(t.popular, popular)}
+              ${sectionCards(t.hidden, hidden)}
+            </aside>
+            <section class="center-stage">
+              <div class="assistant-panel glass">
+                <p class="eyebrow">AI Travel Assistant</p>
+                <h1>${t.help}</h1>
+                <form id="ai-form" class="ai-search">
+                  <input id="ai-query" placeholder="${t.ask}" autocomplete="off">
+                  <button class="primary-btn" type="submit">Enter</button>
+                </form>
+                <div class="quick-queries">
+                  ${["Best places near Kathmandu", "3-day trip under NPR 15,000", "Family-friendly destinations", "Adventure activities in Nepal", "Hidden places in Nagarjun"].map(q => `<button data-action="quick-query" data-query="${q}">${q}</button>`).join("")}
+                </div>
+                <div id="ai-response" class="ai-response">${assistantAnswer("Hidden places in Nagarjun")}</div>
+                <button class="primary-btn large trip-btn" data-action="generate-trip">${t.generate}</button>
+              </div>
+              ${renderMap(ranked)}
+              ${renderWeather()}
+              ${renderProfile(ranked)}
+            </section>
+            <aside class="right-rail">
+              ${renderBudgetCalculator()}
+              ${renderTimeCalculator()}
+              ${renderSavedPanel()}
+            </aside>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderHeader() {
+      return `
+        <nav class="topbar appbar">
+          <button class="brand bare" data-action="dashboard"><span class="brand-mark">TP</span><span>TravelPal</span></button>
+          <div class="nav-actions">
+            <button data-action="category" data-category="healthcare">Healthcare</button>
+            <button data-action="category" data-category="emergency">Emergency</button>
+            <div class="dropdown">
+              <button>Others</button>
+              <div class="dropdown-menu">
+                ${["education", "shopping", "transportation", "business"].map(key => `<button data-action="category" data-category="${key}">${categoryData[key].title}</button>`).join("")}
+              </div>
+            </div>
+            <button class="chip" data-action="toggle-lang">${state.lang === "en" ? "नेपाली" : "English"}</button>
+            <button class="chip" data-action="toggle-theme">${state.theme === "light" ? "Dark" : "Light"}</button>
+          </div>
+        </nav>
+      `;
+    }
+
+    function renderBudgetCalculator() {
+      return `
+        <section class="tool-panel">
+          <h2>Budget Calculator</h2>
+          <label>Total Budget (NPR)<input type="number" id="calc-budget" value="${state.profile?.budget || 15000}"></label>
+          <label>Travelers<input type="number" id="calc-travelers" value="${state.profile?.travelers || 2}"></label>
+          <label>Days<input type="number" id="calc-days" value="${state.profile?.days || 3}"></label>
+          <button class="secondary-btn" data-action="calculate-budget">Calculate</button>
+          <div id="budget-result" class="result-box">${budgetResult()}</div>
+        </section>
+      `;
+    }
+
+    function budgetResult() {
+      const budget = Number(document.querySelector("#calc-budget")?.value || state.profile?.budget || 15000);
+      const travelers = Number(document.querySelector("#calc-travelers")?.value || state.profile?.travelers || 2);
+      const days = Number(document.querySelector("#calc-days")?.value || state.profile?.days || 3);
+      const accommodation = Math.round(days * travelers * 1800);
+      const transportation = Math.round(budget * 0.22);
+      const food = Math.round(days * travelers * 900);
+      const activities = Math.round(budget * 0.18);
+      const remaining = budget - accommodation - transportation - food - activities;
+      return `
+        <div class="pie" style="--a:${accommodation};--b:${transportation};--c:${food};--d:${activities};"></div>
+        <p>Accommodation: NPR ${accommodation.toLocaleString()}</p>
+        <p>Transportation: NPR ${transportation.toLocaleString()}</p>
+        <p>Food: NPR ${food.toLocaleString()}</p>
+        <p>Activities: NPR ${activities.toLocaleString()}</p>
+        <strong>${remaining >= 0 ? "Remaining" : "Adjust budget"}: NPR ${remaining.toLocaleString()}</strong>
+        <small>${remaining >= 0 ? "Good fit for your current profile." : "Try homestays, shared rides, or fewer paid activities."}</small>
+      `;
+    }
+
+    function renderTimeCalculator() {
+      return `
+        <section class="tool-panel">
+          <h2>Trip Time Calculator</h2>
+          <label>Starting Location<input id="start-location" value="Nagarjun"></label>
+          <label>Destination<input id="end-location" value="Swayambhunath"></label>
+          <label>Transportation Type<select id="route-type"><option>Taxi</option><option>Private Car</option><option>Local Bus</option><option>Walking</option></select></label>
+          <button class="secondary-btn" data-action="calculate-time">Find Route</button>
+          <div id="time-result" class="result-box">${timeResult()}</div>
+        </section>
+      `;
+    }
+
+    function timeResult() {
+      const destination = document.querySelector("#end-location")?.value || "Swayambhunath";
+      const type = document.querySelector("#route-type")?.value || "Taxi";
+      const base = type === "Walking" ? 95 : type === "Local Bus" ? 55 : 30;
+      const distance = type === "Walking" ? 6 : 9;
+      return `
+        <div class="route-line"><span></span><span></span><span></span></div>
+        <p>Distance: about ${distance} km</p>
+        <p>Travel time: ${base}-${base + 20} min</p>
+        <p>Best route: Ring Road connector toward ${destination}</p>
+        <p>Recommended departure: 7:00 AM or after 4:30 PM</p>
+        <strong>Suggested option: ${type}</strong>
+      `;
+    }
+
+    function renderMap(ranked) {
+      return `
+        <section class="map-panel">
+          <div class="section-head">
+            <h2>Interactive Nepal Map</h2>
+            <input id="map-search" placeholder="Search destination" data-action="map-search">
+          </div>
+          <div class="map-canvas">
+            ${ranked.slice(0, 7).map((place, index) => `<button class="marker m${index + 1}" data-action="map-place" data-name="${place.name}" title="${place.name}"><span></span>${place.name}</button>`).join("")}
+          </div>
+          <div id="map-detail" class="map-detail">Select a marker to see nearby attractions and route ideas.</div>
+        </section>
+      `;
+    }
+
+    function renderWeather() {
+      return `
+        <section class="info-grid">
+          <div class="info-card">
+            <h2>Weather</h2>
+            <p class="weather-temp">23°C</p>
+            <p>Partly cloudy in Kathmandu Valley. Great for sightseeing, short hikes, and heritage walks.</p>
+            <div class="meta-row"><span>Mon 24°</span><span>Tue 22°</span><span>Wed 25°</span></div>
+          </div>
+          <div class="info-card">
+            <h2>Emergency Services</h2>
+            <p>Police 100 · Ambulance 102 · Tourist Police 1144 · Fire 101</p>
+            <p>Keep a saved copy of your passport, hotel address, and emergency contacts.</p>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderProfile(ranked) {
+      const trip = state.trips[0];
+      return `
+        <section class="profile-panel">
+          <div>
+            <h2>${state.user?.name || "Traveler"}</h2>
+            <p>${state.user?.email || ""}</p>
+            <p>${state.profile?.days || 3} days · NPR ${(state.profile?.budget || 15000).toLocaleString()} · ${state.profile?.transport || "Private Car"}</p>
+          </div>
+          <div>
+            <h3>Preferences</h3>
+            <p>${userTags().slice(0, 10).join(", ") || "Tourism, nature, culture"}</p>
+          </div>
+          <div>
+            <h3>Travel History</h3>
+            <p>${state.history.slice(-3).join(" · ") || "Your searches will appear here."}</p>
+          </div>
+          ${trip ? `<div class="itinerary"><h3>Saved Itinerary</h3>${trip.days.map(day => `<p><strong>Day ${day.day}:</strong> ${day.plan}</p>`).join("")}<button class="secondary-btn" data-action="download-trip">Download PDF</button></div>` : ""}
+        </section>
+      `;
+    }
+
+    function renderSavedPanel() {
+      return `
+        <section class="tool-panel">
+          <h2>Favorites</h2>
+          ${(state.favorites.length ? state.favorites : rankedDestinations().slice(0, 2)).map(item => `<p class="saved-item">${item.name}</p>`).join("")}
+          <h2>Collections</h2>
+          <p>Weekend Nature · Heritage Walk · Family Nepal</p>
+        </section>
+      `;
+    }
+
+    <!-- Page 4: Category Page -->
+    function renderCategory() {
+      const data = categoryData[state.category];
+      app.innerHTML = `
+        <section class="category page-view">
+          ${renderHeader()}
+          <div class="category-hero">
+            <p class="eyebrow">TravelPal Services</p>
+            <h1>${data.title}</h1>
+            <p>${data.intro}</p>
+          </div>
+          <div class="category-grid">
+            <section class="info-card"><h2>Services</h2>${data.services.map(item => `<p>${item}</p>`).join("")}</section>
+            <section class="info-card"><h2>Contacts</h2>${data.contacts.map(item => `<p>${item}</p>`).join("")}</section>
+            <section class="info-card"><h2>Recommendations</h2>${data.recommendations.map(item => `<p>${item}</p>`).join("")}</section>
+          </div>
+          <section class="map-panel category-map">
+            <h2>${data.title} Map</h2>
+            <iframe title="${data.title} map" src="https://www.openstreetmap.org/export/embed.html?bbox=85.247%2C27.705%2C85.367%2C27.785&layer=mapnik"></iframe>
+          </section>
+        </section>
+      `;
+    }
+
+    function assistantAnswer(query) {
+      const q = query.toLowerCase();
+      const ranked = rankedDestinations();
+      let picks = ranked.slice(0, 3);
+      if (q.includes("budget") || q.includes("15000")) picks = ranked.filter(p => p.cost <= 15000).slice(0, 3);
+      if (q.includes("family")) picks = ranked.filter(p => p.tags.includes("family vacation") || p.tags.includes("relaxation")).slice(0, 3);
+      if (q.includes("adventure")) picks = ranked.filter(p => p.tags.includes("adventure") || p.tags.includes("trekking") || p.tags.includes("hiking")).slice(0, 3);
+      if (q.includes("hidden") || q.includes("nagarjun")) picks = ranked.filter(p => p.type === "Hidden Gems" || p.area.toLowerCase().includes("nagarjun")).slice(0, 3);
+      if (q.includes("kathmandu")) picks = ranked.filter(p => ["Kathmandu", "Nagarjun", "Nagarjun Hill"].includes(p.area)).slice(0, 3);
+      return `
+        <h2>TravelPal suggests</h2>
+        <p>Based on your profile, start with ${picks.map(p => p.name).join(", ")}. These match your interests, budget, and travel timing.</p>
+        <ul>${picks.map(p => `<li><strong>${p.name}</strong>: ${p.tip} Estimated cost NPR ${p.cost.toLocaleString()}.</li>`).join("")}</ul>
+        <p>Transport tip: ${state.profile?.transport || "Private Car"} is a good fit. Leave early to avoid Kathmandu Valley traffic and keep one flexible buffer activity each day.</p>
+      `;
+    }
+
+    function generateTrip() {
+      const days = Number(state.profile?.days || 3);
+      const ranked = rankedDestinations();
+      const tripDays = Array.from({ length: days }, (_, index) => {
+        const place = ranked[index % ranked.length];
+        return {
+          day: index + 1,
+          plan: `${place.name} with ${place.time}, local lunch, photography stops, and ${index === 0 ? "a gentle arrival schedule" : "an evening cultural or food experience"}.`
+        };
+      });
+      state.trips.unshift({
+        created: new Date().toISOString(),
+        days: tripDays,
+        estimate: Number(state.profile?.budget || 15000)
+      });
+      state.trips = state.trips.slice(0, 5);
+      save();
+      renderDashboard();
+      document.querySelector(".itinerary")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    function bindActions() {
+      document.querySelectorAll("[data-action]").forEach(el => {
+        el.addEventListener("click", event => {
+          const action = el.dataset.action;
+          if (action === "show-login") setScreen("login");
+          if (action === "dashboard") setScreen("dashboard");
+          if (action === "category") {
+            state.category = el.dataset.category;
+            setScreen("category");
+          }
+          if (action === "toggle-theme") {
+            state.theme = state.theme === "light" ? "dark" : "light";
+            save();
+            render();
+          }
+          if (action === "toggle-lang") {
+            state.lang = state.lang === "en" ? "ne" : "en";
+            save();
+            render();
+          }
+          if (action === "quick-query") {
+            const query = el.dataset.query;
+            state.history.push(query);
+            state.history = state.history.slice(-12);
+            save();
+            document.querySelector("#ai-query").value = query;
+            document.querySelector("#ai-response").innerHTML = assistantAnswer(query);
+          }
+          if (action === "favorite") {
+            const place = destinations.find(p => p.name === el.dataset.name);
+            const exists = state.favorites.some(item => item.name === place.name);
+            state.favorites = exists ? state.favorites.filter(item => item.name !== place.name) : [place, ...state.favorites];
+            save();
+            render();
+          }
+          if (action === "calculate-budget") document.querySelector("#budget-result").innerHTML = budgetResult();
+          if (action === "calculate-time") document.querySelector("#time-result").innerHTML = timeResult();
+          if (action === "generate-trip") generateTrip();
+          if (action === "download-trip") window.print();
+          if (action === "map-place") {
+            const place = rankedDestinations().find(p => p.name === el.dataset.name);
+            document.querySelector("#map-detail").innerHTML = `<strong>${place.name}</strong> · ${place.tip} Nearby ideas: cafes, viewpoint stops, local markets. Route: start from Nagarjun, continue by ${state.profile?.transport || "Taxi"}.`;
+          }
+        });
+      });
+
+      document.querySelector("#login-form")?.addEventListener("submit", event => {
+        event.preventDefault();
+        const name = document.querySelector("#fullName").value.trim();
+        const email = document.querySelector("#email").value.trim();
+        const error = document.querySelector("#login-error");
+        if (!name || !/^[^\s@]+@gmail\.com$/i.test(email)) {
+          error.textContent = "Please enter your full name and a valid Gmail address.";
+          return;
+        }
+        state.user = { name, email };
+        save();
+        setScreen("preferences");
+      });
+
+      document.querySelectorAll("[data-choice-group]").forEach(group => {
+        group.addEventListener("click", event => {
+          const button = event.target.closest(".choice");
+          if (!button) return;
+          button.classList.toggle("selected");
+        });
+      });
+
+      document.querySelector("#profile-form")?.addEventListener("submit", event => {
+        event.preventDefault();
+        const profile = {
+          purpose: selectedChoices("purpose"),
+          activities: selectedChoices("activities"),
+          explore: selectedChoices("explore"),
+          travelers: Number(document.querySelector("#travelers").value),
+          budget: Number(document.querySelector("#budget").value),
+          days: Number(document.querySelector("#days").value),
+          transport: document.querySelector("#transport").value,
+          accommodation: document.querySelector("#accommodation").value
+        };
+        if (!profile.purpose.length || !profile.activities.length || !profile.explore.length) {
+          document.querySelector("#profile-error").textContent = "Select at least one option in the first three steps.";
+          return;
+        }
+        state.profile = profile;
+        save();
+        setScreen("dashboard");
+      });
+
+      document.querySelector("#ai-form")?.addEventListener("submit", event => {
+        event.preventDefault();
+        const query = document.querySelector("#ai-query").value.trim();
+        if (!query) return;
+        state.history.push(query);
+        state.history = state.history.slice(-12);
+        save();
+        document.querySelector("#ai-response").innerHTML = assistantAnswer(query);
+      });
+
+      document.querySelector("#map-search")?.addEventListener("input", event => {
+        const term = event.target.value.toLowerCase();
+        const place = rankedDestinations().find(p => p.name.toLowerCase().includes(term) || p.area.toLowerCase().includes(term));
+        if (place) document.querySelector("#map-detail").innerHTML = `<strong>${place.name}</strong> found near ${place.area}. ${place.tip}`;
+      });
+    }
+
+    function selectedChoices(key) {
+      return [...document.querySelectorAll(`[data-choice-group="${key}"] .selected`)].map(el => el.dataset.choice);
+    }
+
+    const initialHashScreen = window.location.hash.replace(/^#/, "");
+    if (initialHashScreen) {
+      state.screen = initialHashScreen;
+    }
+    updateHistory(state.screen, true);
+    render();
+  </script>
+</body>
+</html>
